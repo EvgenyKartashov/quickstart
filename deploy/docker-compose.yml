@@ -1,0 +1,66 @@
+version: '3.4'
+
+networks:
+  app:
+   driver: "bridge"
+
+services:
+  reverese_proxy:
+    container_name: proxy
+    image: nginx:latest
+    hostname: "nginx"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy.conf:/etc/nginx/proxy.conf:ro
+      - ./ssl/localhost.crt:/etc/ssl/certs/localhost.crt:ro
+      - ./ssl/localhost.key:/etc/ssl/certs/localhost.key:ro
+    ports:
+      - "8080:8080"
+      - "443:443"
+    depends_on:
+      - client
+      - auth
+      - api
+    networks:
+        app:
+          aliases:
+            - "proxy"
+
+  client:
+    container_name: client
+    image: ${DOCKER_REGISTRY-}client
+    build:
+      context: ..
+      dockerfile: src/Client/Dockerfile
+    networks:
+        app:
+    depends_on:
+     - auth
+     - api
+
+  auth:
+    container_name: is4
+    image: ${DOCKER_REGISTRY-}identityserver
+    environment:
+     - "ASPNETCORE_SUBDIR=/is4"
+    build:
+      context: ..
+      dockerfile: src/IdentityServer/Dockerfile
+    networks:
+        app:
+          aliases:
+            - "is4"
+
+  api:
+    container_name: api
+    image: ${DOCKER_REGISTRY-}api
+    environment:
+     - "ASPNETCORE_SUBDIR=/api"
+    build:
+      context: ..
+      dockerfile: src/Api/Dockerfile
+    networks:
+        app:
+          aliases:
+            - "api"
