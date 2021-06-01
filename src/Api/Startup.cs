@@ -22,7 +22,7 @@ namespace Api
             services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
-                    options.Authority = "http://is4";
+                    options.Authority = Configuration.GetSection("Auth:Authority").Get<string>();
                     options.RequireHttpsMetadata = false;
 
                     options.TokenValidationParameters = new TokenValidationParameters

@@ -19,38 +19,26 @@ services:
       - "8080:8080"
       - "443:443"
     depends_on:
-      - client
       - auth
       - api
     networks:
-        app:
-          aliases:
-            - "proxy"
-
-  client:
-    container_name: client
-    image: ${DOCKER_REGISTRY-}client
-    build:
-      context: ..
-      dockerfile: src/Client/Dockerfile
-    networks:
-        app:
-    depends_on:
-     - auth
-     - api
+      app:
+        aliases:
+        - "proxy"
 
   auth:
-    container_name: is4
+    container_name: auth
     image: ${DOCKER_REGISTRY-}identityserver
     environment:
-     - "ASPNETCORE_SUBDIR=/is4"
+     - ASPNETCORE_SUBDIR=/auth
+     - ASPNETCORE_ISSUER_URI=https://localhost/auth
     build:
       context: ..
       dockerfile: src/IdentityServer/Dockerfile
     networks:
-        app:
-          aliases:
-            - "is4"
+      app:
+        aliases:
+        - "auth_proxy"
 
   api:
     container_name: api
@@ -61,6 +49,6 @@ services:
       context: ..
       dockerfile: src/Api/Dockerfile
     networks:
-        app:
-          aliases:
-            - "api"
+      app:
+        aliases:
+          - "api"
